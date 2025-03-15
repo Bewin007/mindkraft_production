@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             'date_of_birth',
             'password',
             'mkid',
-            'recipt_no',  # Updated field name
+            'recipt_no',  # Updated field to accept any string
             'intercollege',
             'is_enrolled',
             'student'
@@ -39,11 +39,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         student_data = validated_data.pop('student', None)
-        
-        # Convert recipt_no to hexadecimal if provided
-        recipt_no = validated_data.get('recipt_no')
-        if recipt_no:
-            validated_data['recipt_no'] = hex(int(recipt_no, 16))[2:]
         
         # Create user instance
         user = User.objects.create_user(
@@ -67,11 +62,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         student_data = validated_data.pop('student', None)
-        
-        # Update recipt_no to hexadecimal if provided
-        recipt_no = validated_data.get('recipt_no')
-        if recipt_no:
-            validated_data['recipt_no'] = hex(int(recipt_no, 16))[2:]
         
         # Update user fields
         for attr, value in validated_data.items():
