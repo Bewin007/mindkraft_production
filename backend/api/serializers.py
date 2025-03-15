@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from .models import Event, Winner, EventCategory, Payment, Coordinator, RegisteredEvents, Cart
 
@@ -49,13 +50,23 @@ class EventSerializer(serializers.ModelSerializer):
         ]
 
 
+
 class RegisteredEventsSerializer(serializers.ModelSerializer):
     user_mkid = serializers.CharField(source='MKID.mkid', read_only=True)  # Get mkid from the related User model
-    event_name = serializers.CharField(read_only=True)  # Get event_name from the RegisteredEvents model directly
+    event_details = serializers.SerializerMethodField()  # Get event details from the JSON data
 
     class Meta:
         model = RegisteredEvents
-        fields = ['MKID', 'user_mkid', 'event_name', 'payment_status', 'registered_at', 'updated_at']
+        fields = ['MKID', 'user_mkid', 'event_name', 'payment_status', 'registered_at', 'updated_at', 'event_details']
+
+    def get_event_details(self, obj):
+        # Load event data from the JSON file
+        with open('/home/dharshan/webprojects/mindkraft25/mindkraft_production/backend/updated_events(5).json', 'r') as file:
+            events_data = json.load(file)
+
+        # Find the event details based on the event_name (which is actually the eventid)
+        event_details = next((event for event in events_data if event['eventid'] == obj.event_name), None)
+        return event_details
 
 class CartSerializer(serializers.ModelSerializer):
     user_mkid = serializers.CharField(source='MKID.mkid', read_only=True)

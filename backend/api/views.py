@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from .models import Cart, Event, RegisteredEvents
 from .serializers import CartSerializer, EventSerializer,RegisteredEventsSerializer
 from rest_framework.permissions import IsAuthenticated
+import json
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -140,15 +141,20 @@ class RegisteredEventsViewSet(viewsets.GenericViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
 
+        # Load event data from the JSON file
+        with open('/home/dharshan/webprojects/mindkraft25/mindkraft_production/backend/updated_events(5).json', 'r') as file:
+            events_data = json.load(file)
+
         # Calculate total amount
         total_amount = 0.0
         for registration in queryset:
             try:
                 # Look up the corresponding Event based on event_name
-                event = Event.objects.get(eventname=registration.event_name)
-                total_amount += float(event.price)
-            except Event.DoesNotExist:
-                continue  # Skip if Event doesn't exist for the given event_name
+                event = next((event for event in events_data if event['eventid'] == registration.event_name), None)
+                if event:
+                    total_amount += float(event['price'].replace('₹', ''))
+            except (ValueError, KeyError):
+                continue  # Skip if price conversion fails or event data is incomplete
 
         return Response({
             'status': 'success',
