@@ -1,10 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import MinValueValidator
-from django.utils import timezone  # Add this import
+from django.utils import timezone
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, first_name, last_name, register_no, mobile_no, password, date_of_birth, is_faculty=False, intercollege=False, is_enrolled=False, **extra_fields):
+    def create_user(self, email, first_name, last_name, register_no, mobile_no, password, date_of_birth, recipt_no=None, intercollege=False, is_enrolled=False, **extra_fields):
         if not email:
             raise ValueError("The Email field must be set")
         if not password:
@@ -18,7 +18,7 @@ class UserManager(BaseUserManager):
             register_no=register_no,
             mobile_no=mobile_no,
             date_of_birth=date_of_birth,
-            is_faculty=is_faculty,
+            recipt_no=recipt_no,
             intercollege=intercollege,
             is_enrolled=is_enrolled,
             **extra_fields
@@ -32,7 +32,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, first_name, last_name, register_no, mobile_no, password, date_of_birth, **extra_fields)
-    
+
     def generate_mkid(self):
         last_user = User.objects.order_by("-id").first()
         if last_user and last_user.mkid.startswith("MK25P"):
@@ -41,17 +41,16 @@ class UserManager(BaseUserManager):
             last_number = 0
         return f"MK25P{last_number + 1:05d}"
 
-
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
-    first_name = models.CharField(max_length=255,default='')
-    last_name = models.CharField(max_length=255,default='')
+    first_name = models.CharField(max_length=255, default='')
+    last_name = models.CharField(max_length=255, default='')
     register_no = models.CharField(max_length=255)
     mobile_no = models.CharField(max_length=20)
     password = models.CharField(max_length=100)
     mkid = models.CharField(max_length=10, unique=True, editable=False)
     date_of_birth = models.DateField()
-    is_faculty = models.BooleanField(default=False)
+    recipt_no = models.CharField(max_length=16, default='')  # New field to save hexadecimal value
     intercollege = models.BooleanField(default=False)
     is_enrolled = models.BooleanField(default=False)
     

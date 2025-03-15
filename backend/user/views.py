@@ -238,7 +238,7 @@ class UserLoginView(ObtainAuthToken):
             mobile_no = getattr(data, 'mobile_no', '')
             mkid = getattr(data, 'mkid', '')
             intercollege = getattr(data, 'intercollege', False)
-            is_faculty = getattr(data, 'is_faculty', False)
+            recipt_no = getattr(data, 'recipt_no', '')  # Updated field name
             
             # Include user information in custom_data
             custom_data = {
@@ -250,7 +250,7 @@ class UserLoginView(ObtainAuthToken):
                 'mobile_no': mobile_no,
                 'mkid': mkid,
                 'intercollege': intercollege,
-                'is_faculty': is_faculty
+                'recipt_no': recipt_no  # Updated field name
             }
             
             refresh['custom_data'] = custom_data
@@ -267,12 +267,12 @@ class UserLoginView(ObtainAuthToken):
                 'mobile_no': mobile_no,
                 'mkid': mkid,
                 'intercollege': intercollege,
-                'is_faculty': is_faculty
+                'recipt_no': recipt_no  # Updated field name
             }
             
             # If user is a student, try to get additional student details
             try:
-                if not is_faculty and hasattr(data, 'student'):
+                if not recipt_no and hasattr(data, 'student'):
                     student = data.student
                     student_data = {
                         'college_name': student.college_name,
@@ -373,73 +373,6 @@ class UserRegistrationView(APIView):
         
         logger.warning(f"Invalid registration data: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# class VerifyOTPView(APIView):
-#     def post(self, request):
-#         provided_otp = request.data.get('otp')
-#         email = request.data.get('email')
-        
-#         logger.info(f"OTP verification request for email: {email}")
-#         logger.debug(f"OTP provided: {provided_otp[:2]}****" if provided_otp else "No OTP provided")
-        
-#         if not email:
-#             logger.warning("OTP verification failed: email not provided")
-#             return Response({
-#                 'message': 'Email is required'
-#             }, status=status.HTTP_400_BAD_REQUEST)
-        
-#         # Verify the OTP
-#         if verify_otp(email, provided_otp):
-#             # Get registration data from Redis
-#             registration_data = get_registration_data(email)
-            
-#             if not registration_data:
-#                 logger.warning(f"Registration data expired for {email}")
-#                 return Response({
-#                     'message': 'Registration data expired'
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-#             # Create user with stored registration data
-#             serializer = UserSerializer(data=registration_data)
-#             if serializer.is_valid():
-#                 user = serializer.save()
-                
-#                 # Clear OTP and registration data from Redis
-#                 clear_otp(email)
-#                 clear_registration_data(email)
-                
-#                 # Add default mindkraft event to cart
-#                 try:
-#                     # Get or create the mindkraft event (assuming it exists in the database)
-#                     mindkraft_event, created = Event.objects.get_or_create(
-#                         eventname="mindkraft", 
-#                         defaults={'price': 250, 'description': 'Mindkraft 25 Registration'}
-#                     )
-                    
-#                     # Create a cart for the user
-#                     cart = Cart.objects.create(MKID=user)
-                    
-#                     # Add the mindkraft event to the cart
-#                     cart.events.add(mindkraft_event)
-                    
-#                     logger.info(f"Added default mindkraft event to cart for user {email}")
-#                 except Exception as e:
-#                     logger.error(f"Error adding default event to cart: {str(e)}")
-                
-#                 logger.info(f"Registration successful for {email}")
-                
-#                 return Response({
-#                     'message': 'Registration successful',
-#                     'user': serializer.data
-#                 }, status=status.HTTP_201_CREATED)
-            
-#             logger.warning(f"User validation failed: {serializer.errors}")
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-#         logger.warning(f"Invalid OTP provided for {email}")
-#         return Response({
-#             'message': 'Invalid OTP'
-#         }, status=status.HTTP_400_BAD_REQUEST)
 
 class InitiateForgotPasswordView(APIView):
     permission_classes = [AllowAny]

@@ -14,8 +14,8 @@ class StudentInline(admin.StackedInline):
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('mkid', 'email', 'first_name', 'last_name', 'register_no', 'is_faculty', 'is_enrolled', 'intercollege', 'is_staff')
-    list_filter = ('is_faculty', 'is_enrolled', 'intercollege', 'is_staff')
+    list_display = ('mkid', 'email', 'first_name', 'last_name', 'register_no', 'recipt_no', 'is_enrolled', 'intercollege', 'is_staff')
+    list_filter = ('recipt_no', 'is_enrolled', 'intercollege', 'is_staff')
     search_fields = ('email', 'first_name', 'last_name', 'register_no', 'mkid')
     ordering = ('-id',)
     filter_horizontal = ('groups', 'user_permissions',)
@@ -30,7 +30,7 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('collapse',)
         }),
         ('Status', {
-            'fields': ('is_faculty', 'intercollege', 'is_enrolled')
+            'fields': ('recipt_no', 'intercollege', 'is_enrolled')
         }),
         ('Permissions', {
             'fields': ('is_staff', 'is_superuser', 'groups', 'user_permissions')
@@ -42,7 +42,7 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': (
                 'email', 'first_name', 'last_name', 'register_no', 'mobile_no', 'date_of_birth',
-                'password1', 'password2', 'is_faculty', 'intercollege', 'is_enrolled',
+                'password1', 'password2', 'recipt_no', 'intercollege', 'is_enrolled',
                 'is_staff', 'is_superuser'
             )
         }),

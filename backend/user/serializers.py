@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             'date_of_birth',
             'password',
             'mkid',
-            'is_faculty',
+            'recipt_no',  # Updated field name
             'intercollege',
             'is_enrolled',
             'student'
@@ -40,6 +40,11 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         student_data = validated_data.pop('student', None)
         
+        # Convert recipt_no to hexadecimal if provided
+        recipt_no = validated_data.get('recipt_no')
+        if recipt_no:
+            validated_data['recipt_no'] = hex(int(recipt_no, 16))[2:]
+        
         # Create user instance
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -49,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
             mobile_no=validated_data['mobile_no'],
             password=validated_data['password'],
             date_of_birth=validated_data['date_of_birth'],
-            is_faculty=validated_data.get('is_faculty', False),
+            recipt_no=validated_data.get('recipt_no', ''),
             intercollege=validated_data.get('intercollege', False),
             is_enrolled=validated_data.get('is_enrolled', False)
         )
@@ -62,6 +67,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         student_data = validated_data.pop('student', None)
+        
+        # Update recipt_no to hexadecimal if provided
+        recipt_no = validated_data.get('recipt_no')
+        if recipt_no:
+            validated_data['recipt_no'] = hex(int(recipt_no, 16))[2:]
         
         # Update user fields
         for attr, value in validated_data.items():
