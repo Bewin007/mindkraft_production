@@ -1,6 +1,7 @@
 import json
 from rest_framework import serializers
 from .models import Event, Winner, EventCategory, Payment, Coordinator, RegisteredEvents, Cart
+from user.models import User, Student
 
 class EventCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,7 +36,6 @@ class CoordinatorSerializer(serializers.ModelSerializer):
             'Faculty_coordinator_mobile_no' ,
         ]
 
-
 class EventSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     coordinators = CoordinatorSerializer(many=True, read_only=True) 
@@ -48,8 +48,6 @@ class EventSerializer(serializers.ModelSerializer):
             'start_time', 'end_time', 'price',
             'participation_strength_setlimit', 'coordinators'
         ]
-
-
 
 class RegisteredEventsSerializer(serializers.ModelSerializer):
     user_mkid = serializers.CharField(source='MKID.mkid', read_only=True)  # Get mkid from the related User model
@@ -76,3 +74,38 @@ class CartSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ['id', 'MKID', 'user_mkid', 'events', 
                  'events_detail', 'added_at', 'updated_at']
+        
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'register_no', 
+            'mobile_no', 'mkid', 'date_of_birth', 'recipt_no', 
+            'intercollege', 'is_enrolled'
+        ]
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            'college_name', 'branch', 'dept', 
+            'year_of_study', 'tshirt', 'registered_at'
+        ]
+
+class DetailedRegisteredEventsSerializer(serializers.ModelSerializer):
+    user = UserSerializer(source='MKID', read_only=True)
+    student = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RegisteredEvents
+        fields = [
+            'id', 'event_name', 'payment_status', 
+            'registered_at', 'updated_at', 'user', 'student'
+        ]
+
+    def get_student(self, obj):
+        try:
+            student = Student.objects.get(user=obj.MKID)
+            return StudentSerializer(student).data
+        except Student.DoesNotExist:
+            return None

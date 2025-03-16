@@ -1,10 +1,13 @@
+import logging
 from rest_framework import viewsets,status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Cart, Event, RegisteredEvents
-from .serializers import CartSerializer, EventSerializer,RegisteredEventsSerializer
+from .serializers import CartSerializer, DetailedRegisteredEventsSerializer, EventSerializer,RegisteredEventsSerializer
 from rest_framework.permissions import IsAuthenticated
 import json
+from user.models import User, Student
+from user.serializers import UserSerializer, StudentSerializer
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -201,3 +204,44 @@ class RegisteredEventsAPIView(APIView):
             "failed_events": failed_events
         })
 
+
+class AllRegisteredEventsViewSet(viewsets.ViewSet):
+    # permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        registered_events = RegisteredEvents.objects.all()
+        
+        if not registered_events.exists():
+            return Response({
+                'status': 'error',
+                'message': 'No registered events found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Load event data from the JSON file
+        with open('/home/dharshan/webprojects/mindkraft25/mindkraft_production/backend/updated_events(5).json', 'r') as file:
+            events_data = json.load(file)
+        
+        detailed_registered_events = []
+        for event in registered_events:
+            user = User.objects.get(id=event.MKID.id)
+            user_data = UserSerializer(user).data
+            try:
+                student = Student.objects.get(user=user)
+                student_data = StudentSerializer(student).data
+            except Student.DoesNotExist:
+                student_data = None
+            
+            # Find the corresponding event details from the JSON data
+            event_details = next((event_detail for event_detail in events_data if event_detail['eventid'] == event.event_name), None)
+            
+            event_data = DetailedRegisteredEventsSerializer(event).data
+            event_data['user'] = user_data
+            event_data['student'] = student_data
+            event_data['event_details'] = event_details
+            detailed_registered_events.append(event_data)
+        
+        return Response({
+            'status': 'success',
+            'message': 'All registered events retrieved successfully',
+            'data': detailed_registered_events
+        }, status=status.HTTP_200_OK)
