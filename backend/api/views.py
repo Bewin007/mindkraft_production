@@ -206,9 +206,16 @@ class RegisteredEventsAPIView(APIView):
 
 
 class AllRegisteredEventsViewSet(viewsets.ViewSet):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Ensure user is authenticated
 
     def list(self, request):
+        # Check if user is staff
+        if not request.user.is_staff:
+            return Response({
+                'status': 'error',
+                'message': 'You do not have permission to access this data'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         registered_events = RegisteredEvents.objects.all()
         
         if not registered_events.exists():
